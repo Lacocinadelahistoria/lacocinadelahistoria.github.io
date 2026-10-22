@@ -19,7 +19,7 @@ function current() { return data && (Array.isArray(data[active]) ? data[active][
 function showScreen(authenticated) {
   $('#loginArea').hidden=authenticated; $('#adminArea').hidden=!authenticated;
   $('#logout').hidden=!authenticated; document.body.classList.toggle('signed-out',!authenticated);
-  $('#pageTitle').textContent=authenticated?'Publicar y compartir nuestra historia':'Ingresar al administrador';
+  $('#pageTitle').textContent=authenticated?'Publicar y compartir nuestra historia':'Espacio de administradores';
   $('#pageIntro').textContent=authenticated?'Escribí los textos, pegá los enlaces de Drive y elegí qué mostrar en la web.':'Iniciá sesión con tu usuario y contraseña para administrar la web.';
 }
 function controls() { const enabled=!!token && !busy; $('#fields').disabled=!enabled; $('#add').disabled=!enabled; $('#remove').disabled=!enabled || !current(); $('#save').disabled=!enabled || !dirty; }
