@@ -30,7 +30,7 @@ export function validate(data) {
   for(const [key,max]of Object.entries(limits))if(!Array.isArray(data[key])||data[key].length>max)return 'Lista no válida: '+key;
   for(const key of ['proyecto','portada','participacion','textos'])if(!data[key]||Array.isArray(data[key])||typeof data[key]!=='object')return 'Sección no válida: '+key;
   const fields={historias:['id','titulo','categoria','bajada','texto'],mapas:['titulo','enlace'],recorridos:['titulo','descripcion','enlace'],cronologia:['fecha','titulo','texto'],patrimonio:['titulo','texto'],participacion:['titulo','texto','cita'],proyecto:['titulo','texto','creditos'],portada:['titulo','destacado','presentacion','bienvenidaTitulo','bienvenidaTexto','facebook']};
-  const allowed={historias:[...fields.historias,'autor','fecha','imagen','imagenAlt','archivo','fuente','publicado','icono'],mapas:[...fields.mapas,'descripcion','publicado'],recorridos:[...fields.recorridos,'localidades','duracion','distancia','paradas','publicado'],cronologia:fields.cronologia,patrimonio:[...fields.patrimonio,'icono'],participacion:fields.participacion,proyecto:fields.proyecto,portada:[...fields.portada,'notaHistorias','mostrarMapaUbicacion']};
+  const allowed={historias:[...fields.historias,'autor','fecha','imagen','imagenAlt','archivo','fuente','publicado','icono'],mapas:[...fields.mapas,'descripcion','publicado'],recorridos:[...fields.recorridos,'localidades','duracion','distancia','paradas','publicado'],cronologia:fields.cronologia,patrimonio:[...fields.patrimonio,'icono'],participacion:fields.participacion,proyecto:fields.proyecto,portada:[...fields.portada,'notaHistorias','mostrarMapaUbicacion','imagenLogo','imagenPortada']};
   fields.textos=[];allowed.textos=CocinaTextFields.map(x=>x[0]);
   if(Object.keys(data).some(k=>!allowed[k]))return 'Sección desconocida.';
   const ids=new Set();
@@ -47,6 +47,7 @@ export function validate(data) {
       if(item.imagen&&!CocinaMedia.image(item.imagen))return 'Imagen no válida.';
     }
     for(const key of ['archivo','fuente','facebook','enlace'])if(item[key]&&!CocinaMedia.url(item[key]))return 'El enlace debe usar HTTPS.';
+    for(const key of ['imagenLogo','imagenPortada'])if(item[key]&&!CocinaMedia.image(item[key]))return 'Enlace de imagen no válido.';
     if(['mapas','recorridos'].includes(section)&&!CocinaMedia.map(item.enlace))return 'Usá un enlace completo de Google My Maps.';
   }
   return '';

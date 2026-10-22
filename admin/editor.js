@@ -9,7 +9,7 @@ const schemas = {
   patrimonio:[['titulo','Título','text',true],['texto','Descripción','textarea',true],['icono','Símbolo o ícono','text']],
   participacion:[['titulo','Título','text',true],['texto','Invitación a participar','textarea',true],['cita','Frase destacada','textarea',true]],
   proyecto:[['titulo','Título de la sección','text',true],['texto','Presentación del proyecto','textarea',true],['creditos','Créditos del pie de página','text',true]],
-  portada:[['titulo','Título principal','text',true],['destacado','Frase destacada','text',true],['presentacion','Presentación','textarea',true],['bienvenidaTitulo','Título de bienvenida','text',true],['bienvenidaTexto','Texto de bienvenida','textarea',true],['notaHistorias','Nota debajo de las publicaciones','textarea'],['facebook','Enlace de Facebook','url',true],['mostrarMapaUbicacion','Mostrar el mapa de ubicación de Baradero','checkbox']],
+  portada:[['titulo','Título principal','text',true],['destacado','Frase destacada','text',true],['presentacion','Presentación','textarea',true],['bienvenidaTitulo','Título de bienvenida','text',true],['bienvenidaTexto','Texto de bienvenida','textarea',true],['notaHistorias','Nota debajo de las publicaciones','textarea'],['facebook','Enlace de Facebook','url',true],['imagenLogo','Enlace de imagen para el logo (opcional)','url'],['imagenPortada','Enlace de imagen de portada (opcional)','url'],['mostrarMapaUbicacion','Mostrar el mapa de ubicación de Baradero','checkbox']],
   textos:CocinaTextFields.map(([key,label])=>[key,label,'textarea'])
 };
 let data, sha='', api='', token='', active='historias', selected=0, dirty=false, busy=false, textGroup='Menús';

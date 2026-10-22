@@ -37,6 +37,8 @@ function renderData(data) {
     $('#heroText').textContent = front.presentacion; $('#welcomeTitle').textContent = front.bienvenidaTitulo; $('#welcomeText').textContent = front.bienvenidaTexto; $('#storiesNote').textContent = front.notaHistorias;
     const facebook = CocinaMedia.url(front.facebook); if (facebook) document.querySelectorAll('[data-facebook]').forEach(a => a.href = facebook);
     $('#locationMap').hidden=front.mostrarMapaUbicacion===false;
+    if(CocinaMedia.image(front.imagenLogo||''))$('.brand img').src=CocinaMedia.image(front.imagenLogo);
+    if(CocinaMedia.image(front.imagenPortada||''))$('.art-circle img').src=CocinaMedia.image(front.imagenPortada);
   }
   if(data.patrimonio) $('#heritageItems').innerHTML = data.patrimonio.map(x => `<article><span class="big-icon">${esc(x.icono || '✦')}</span><h3>${esc(x.titulo)}</h3>${paragraphs(x.texto)}</article>`).join('');
   if(data.participacion) { $('#participateTitle').textContent=data.participacion.titulo; $('#participateText').textContent=data.participacion.texto; $('#participateQuote').textContent=data.participacion.cita; }

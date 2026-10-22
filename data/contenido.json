@@ -97,7 +97,9 @@
     "bienvenidaTexto": "Recuperamos documentos, imágenes y relatos para conocer el pasado de Baradero y pensar su presente. Este sitio está en construcción: los primeros contenidos son ejemplos de cómo se organizará el archivo.",
     "notaHistorias": "Los textos de muestra son introducciones editoriales, no investigaciones históricas completas. Se ampliarán con fuentes y fotografías verificadas.",
     "facebook": "https://www.facebook.com/profile.php?id=100055864893877",
-    "mostrarMapaUbicacion": true
+    "mostrarMapaUbicacion": true,
+    "imagenLogo": "",
+    "imagenPortada": ""
   },
   "patrimonio": [
     {
