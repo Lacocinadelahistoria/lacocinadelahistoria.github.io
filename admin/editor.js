@@ -15,7 +15,13 @@ const schemas = {
 let data, sha='', api='', token='', active='historias', selected=0, dirty=false, busy=false, textGroup='Menús', pendingRemoval=null;
 function group(label,key) { return key.startsWith('menu')?'Menús':label.includes(':')?label.split(':')[0]:'Identidad y buscadores'; }
 function status(message) { $('#status').textContent=message; }
-function current() { return Array.isArray(data[active]) ? data[active][selected] : data[active]; }
+function current() { return data && (Array.isArray(data[active]) ? data[active][selected] : data[active]); }
+function showScreen(authenticated) {
+  $('#loginArea').hidden=authenticated; $('#adminArea').hidden=!authenticated;
+  $('#logout').hidden=!authenticated; document.body.classList.toggle('signed-out',!authenticated);
+  $('#pageTitle').textContent=authenticated?'Publicar y compartir nuestra historia':'Ingresar al administrador';
+  $('#pageIntro').textContent=authenticated?'Escribí los textos, pegá los enlaces de Drive y elegí qué mostrar en la web.':'Iniciá sesión con tu usuario y contraseña para administrar la web.';
+}
 function controls() { const enabled=!!token && !busy; $('#fields').disabled=!enabled; $('#add').disabled=!enabled; $('#remove').disabled=!enabled || !current(); $('#save').disabled=!enabled || !dirty; }
 function changed() { dirty=true; controls(); $('#session').textContent='Cambios sin guardar'; }
 function render() {
@@ -51,7 +57,7 @@ function render() {
 async function request(route,options={}) {
   const r=await fetch(api+route,{...options,headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{}),...options.headers}});
   const body=await r.json().catch(()=>({error:'Respuesta no válida del servicio.'}));
-  if(!r.ok){if(r.status===401){token='';$('#loginArea').hidden=false;$('#logout').hidden=true;controls();}throw Error(body.error||'No se pudo completar la operación.');}return body;
+  if(!r.ok){if(r.status===401){token='';showScreen(false);controls();}throw Error(body.error||'No se pudo completar la operación.');}return body;
 }
 function validateAll() {
   for(const [section,fields] of Object.entries(schemas))for(const item of Array.isArray(data[section])?data[section]:[data[section]]){
@@ -70,18 +76,19 @@ $('#confirmDelete').onclick=()=>{if(!pendingRemoval)return;const {section,index}
 $('#loginForm').onsubmit=async e=>{e.preventDefault();const button=e.submitter;button.disabled=true;try{
   const auth=await request('/login',{method:'POST',body:JSON.stringify({username:$('#username').value.trim(),password:$('#password').value})});token=auth.token;$('#password').value='';
   if(!dirty){const content=await request('/content');data=content.data;sha=content.sha;}
-  $('#loginArea').hidden=true;$('#logout').hidden=false;$('#session').textContent=dirty?'Cambios sin guardar · '+auth.username:'Sesión de '+auth.username;status(dirty?'Sesión restablecida. Se conservaron los cambios que estabas editando.':'Sesión iniciada. Podés editar y publicar.');render();
-}catch(error){token='';controls();status(error.message);}finally{button.disabled=false;}};
+  showScreen(true);$('#session').textContent=dirty?'Cambios sin guardar · '+auth.username:'Sesión de '+auth.username;status(dirty?'Sesión restablecida. Se conservaron los cambios que estabas editando.':'Sesión iniciada. Podés editar y publicar.');render();$('#pageTitle').focus();
+}catch(error){token='';showScreen(false);controls();status(error.message);}finally{button.disabled=false;}};
 $('#logout').onclick=()=>{if(dirty&&!confirm('Hay cambios sin guardar. ¿Querés cerrar sesión y descartarlos?'))return;token='';dirty=false;location.reload();};
 $('#save').onclick=async()=>{try{
   validateAll();busy=true;controls();status('Guardando los contenidos…');
   const result=await request('/content',{method:'PUT',body:JSON.stringify({data,sha})});sha=result.sha;dirty=false;$('#session').textContent='Cambios guardados';status('Cambios guardados. GitHub Pages está actualizando la web; puede tardar unos minutos.');
 }catch(error){status(error.message);}finally{busy=false;controls();}};
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
-Promise.all([fetch('config.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw Error('config');return r.json();}),fetch('../data/contenido.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw Error('data');return r.json();})]).then(([config,content])=>{
-  data=content;let endpoint=CocinaMedia.url(config.apiBase);
+fetch('config.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw Error('config');return r.json();}).then(config=>{
+  let endpoint=CocinaMedia.url(config.apiBase);
   if(!endpoint && ['localhost','127.0.0.1'].includes(location.hostname)) { try { const local=new URL(config.apiBase); if(local.origin===location.origin)endpoint=local.href; } catch {} }
   api=endpoint?endpoint.replace(/\/$/,''):'';
-  if(api){$('#loginArea').hidden=false;status('Ingresá con tu usuario para editar. Los contenidos se muestran en modo consulta hasta iniciar sesión.');}else{status('Panel preparado · acceso pendiente de activación. Podés consultar los contenidos y los campos. El ingreso y la publicación se habilitarán al conectar el servicio de administración.');}
-  render();
-}).catch(()=>status('No se pudo cargar el panel. Intentá recargar la página.'));
+  showScreen(false);
+  if(api){$('#loginButton').disabled=false;status('Ingresá para acceder a las secciones y herramientas de edición.');}
+  else{status('El acceso al administrador todavía no está habilitado.');}
+}).catch(()=>status('No se pudo cargar el ingreso. Intentá recargar la página.'));
