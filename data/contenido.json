@@ -123,18 +123,7 @@
     "texto": "Una fotografía familiar, un documento, un recuerdo o una pregunta pueden abrir nuevas investigaciones. Escribinos para colaborar con el proyecto.",
     "cita": "“La historia se cocina entre todos, con memoria, preguntas y nuevas miradas.”"
   },
-  "recorridos": [
-    {
-      "titulo": "Prueba temporal del administrador",
-      "descripcion": "Ficha temporal para verificar guardado y eliminación; no se mostrará en la web.",
-      "localidades": "",
-      "duracion": "",
-      "distancia": "",
-      "paradas": "",
-      "enlace": "https://www.google.com/maps/d/viewer?mid=abcdefghijkl",
-      "publicado": false
-    }
-  ],
+  "recorridos": [],
   "textos": {
     "archivoBuscar": "Buscar en las historias",
     "archivoDescripcion": "Consultá las historias disponibles por palabra clave. En próximas etapas, este espacio podrá incorporar colecciones de fotografías y documentos descargables.",
