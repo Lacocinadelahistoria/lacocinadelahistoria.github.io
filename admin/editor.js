@@ -12,7 +12,7 @@ const schemas = {
   portada:[['titulo','Título principal','text',true],['destacado','Frase destacada','text',true],['presentacion','Presentación','textarea',true],['bienvenidaTitulo','Título de bienvenida','text',true],['bienvenidaTexto','Texto de bienvenida','textarea',true],['notaHistorias','Nota debajo de las publicaciones','textarea'],['facebook','Enlace de Facebook','url',true],['imagenLogo','Enlace de imagen para el logo (opcional)','url'],['imagenPortada','Enlace de imagen de portada (opcional)','url'],['mostrarMapaUbicacion','Mostrar el mapa de ubicación de Baradero','checkbox']],
   textos:CocinaTextFields.map(([key,label])=>[key,label,'textarea'])
 };
-let data, sha='', api='', token='', active='historias', selected=0, dirty=false, busy=false, textGroup='Menús';
+let data, sha='', api='', token='', active='historias', selected=0, dirty=false, busy=false, textGroup='Menús', pendingRemoval=null;
 function group(label,key) { return key.startsWith('menu')?'Menús':label.includes(':')?label.split(':')[0]:'Identidad y buscadores'; }
 function status(message) { $('#status').textContent=message; }
 function current() { return Array.isArray(data[active]) ? data[active][selected] : data[active]; }
@@ -39,7 +39,7 @@ function render() {
     const input=document.createElement(type==='textarea'?'textarea':'input'); if(type!=='textarea')input.type=type;
     input.id='field-'+key; input.name=key; input.required=!!required; input.maxLength=type==='textarea'?100000:2000;
     if(type==='checkbox')input.checked=item[key]===true; else input.value=item[key]||'';
-    input.addEventListener('input',()=>{item[key]=type==='checkbox'?input.checked:input.value;changed();});
+    input.addEventListener('input',()=>{item[key]=type==='checkbox'?input.checked:input.value;if(key==='titulo'&&Array.isArray(data[active]))$('#items').children[selected].textContent=input.value||'Sin título';changed();});
     wrap.append(input);
     if(['imagen','archivo','enlace'].includes(key)) { const hint=document.createElement('small');hint.textContent=key==='enlace'?'Usá el enlace de My Maps, no el código HTML ni un enlace corto.':'El archivo debe permitir acceso público. No es necesario subirlo a GitHub.';wrap.append(hint); }
     $('#fields').append(wrap);
@@ -63,7 +63,10 @@ function validateAll() {
 $('#tabs').onclick=e=>{const b=e.target.closest('[data-tab]');if(b){active=b.dataset.tab;selected=0;render();}};
 $('#textGroup').onchange=()=>{textGroup=$('#textGroup').value;render();};
 $('#add').onclick=()=>{const item={};for(const [key,,type]of schemas[active])item[key]=type==='checkbox'?false:'';if(active==='historias')item.id=crypto.randomUUID();data[active].push(item);selected=data[active].length-1;changed();render();};
-$('#remove').onclick=()=>{const item=current();if(!Array.isArray(data[active])||!item)return;if(!confirm('¿Eliminar “'+(item.titulo||'Sin título')+'”? Se quitará de la web cuando guardes los cambios. El archivo original de Drive o My Maps no se elimina.'))return;data[active].splice(selected,1);selected=Math.max(0,selected-1);changed();render();status('Elemento eliminado del formulario. Guardá los cambios para quitarlo de la web.');};
+$('#editor').onsubmit=e=>e.preventDefault();
+$('#remove').onclick=()=>{const item=current();if(!Array.isArray(data[active])||!item)return;pendingRemoval={section:active,index:selected};$('#deleteTitle').textContent='¿Eliminar “'+(item.titulo||'Sin título')+'”?';$('#deleteDialog').showModal();};
+$('#cancelDelete').onclick=()=>{$('#deleteDialog').close();pendingRemoval=null;};
+$('#confirmDelete').onclick=()=>{if(!pendingRemoval)return;const {section,index}=pendingRemoval;data[section].splice(index,1);selected=Math.max(0,index-1);pendingRemoval=null;$('#deleteDialog').close();changed();render();status('Elemento eliminado del formulario. Guardá los cambios para quitarlo de la web.');};
 $('#loginForm').onsubmit=async e=>{e.preventDefault();const button=e.submitter;button.disabled=true;try{
   const auth=await request('/login',{method:'POST',body:JSON.stringify({username:$('#username').value.trim(),password:$('#password').value})});token=auth.token;$('#password').value='';
   if(!dirty){const content=await request('/content');data=content.data;sha=content.sha;}
