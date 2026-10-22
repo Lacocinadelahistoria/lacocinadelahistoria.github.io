@@ -1,6 +1,6 @@
 'use strict';
 const $ = s => document.querySelector(s);
-const labels = {historias:'Publicaciones', mapas:'Mapas', recorridos:'Recorridos', cronologia:'Cronología', patrimonio:'Patrimonio', participacion:'Participación', proyecto:'Quiénes somos', portada:'Portada'};
+const labels = {historias:'Publicaciones', mapas:'Mapas', recorridos:'Recorridos', cronologia:'Cronología', patrimonio:'Patrimonio', participacion:'Participación', proyecto:'Quiénes somos', portada:'Portada', textos:'Textos y menús'};
 const schemas = {
   historias:[['titulo','Título','text',true],['categoria','Categoría','text',true],['bajada','Presentación breve','textarea',true],['texto','Texto de la publicación','textarea',true],['autor','Autoría','text'],['fecha','Fecha o referencia temporal','text'],['imagen','Enlace de la imagen en Drive o URL de imagen','url'],['imagenAlt','Descripción de la imagen','text'],['archivo','Enlace del PDF o documento en Drive','url'],['fuente','Enlace de la fuente','url'],['publicado','Mostrar en la web','checkbox']],
   mapas:[['titulo','Título del mapa','text',true],['descripcion','Descripción','textarea'],['enlace','Enlace completo de Google My Maps','url',true],['publicado','Mostrar en la web','checkbox']],
@@ -9,15 +9,23 @@ const schemas = {
   patrimonio:[['titulo','Título','text',true],['texto','Descripción','textarea',true],['icono','Símbolo o ícono','text']],
   participacion:[['titulo','Título','text',true],['texto','Invitación a participar','textarea',true],['cita','Frase destacada','textarea',true]],
   proyecto:[['titulo','Título de la sección','text',true],['texto','Presentación del proyecto','textarea',true],['creditos','Créditos del pie de página','text',true]],
-  portada:[['titulo','Título principal','text',true],['destacado','Frase destacada','text',true],['presentacion','Presentación','textarea',true],['bienvenidaTitulo','Título de bienvenida','text',true],['bienvenidaTexto','Texto de bienvenida','textarea',true],['notaHistorias','Nota debajo de las publicaciones','textarea'],['facebook','Enlace de Facebook','url',true],['mostrarMapaUbicacion','Mostrar el mapa de ubicación de Baradero','checkbox']]
+  portada:[['titulo','Título principal','text',true],['destacado','Frase destacada','text',true],['presentacion','Presentación','textarea',true],['bienvenidaTitulo','Título de bienvenida','text',true],['bienvenidaTexto','Texto de bienvenida','textarea',true],['notaHistorias','Nota debajo de las publicaciones','textarea'],['facebook','Enlace de Facebook','url',true],['mostrarMapaUbicacion','Mostrar el mapa de ubicación de Baradero','checkbox']],
+  textos:CocinaTextFields.map(([key,label])=>[key,label,'textarea'])
 };
-let data, sha='', api='', token='', active='historias', selected=0, dirty=false, busy=false;
+let data, sha='', api='', token='', active='historias', selected=0, dirty=false, busy=false, textGroup='Menús';
+function group(label,key) { return key.startsWith('menu')?'Menús':label.includes(':')?label.split(':')[0]:'Identidad y buscadores'; }
 function status(message) { $('#status').textContent=message; }
 function current() { return Array.isArray(data[active]) ? data[active][selected] : data[active]; }
 function controls() { const enabled=!!token && !busy; $('#fields').disabled=!enabled; $('#add').disabled=!enabled; $('#remove').disabled=!enabled || !current(); $('#save').disabled=!enabled || !dirty; }
 function changed() { dirty=true; controls(); $('#session').textContent='Cambios sin guardar'; }
 function render() {
   $('#sectionTitle').textContent=labels[active];
+  $('#textGroupLabel').hidden=active!=='textos';
+  if(active==='textos'){
+    $('#textGroup').replaceChildren();
+    for(const name of new Set(schemas.textos.map(([key,label])=>group(label,key)))){const option=document.createElement('option');option.value=name;option.textContent=name;$('#textGroup').append(option);}
+    $('#textGroup').value=textGroup;
+  }
   document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tab===active));
   const list=Array.isArray(data[active]); $('#add').hidden=!list; $('#remove').hidden=!list; $('#add').textContent=active==='recorridos'?'Agregar recorrido':active==='mapas'?'Agregar mapa':active==='cronologia'?'Agregar acontecimiento':active==='patrimonio'?'Agregar elemento':'Agregar publicación';
   $('#sectionHelp').textContent=active==='recorridos'?'Creá una ruta histórica con sus paradas. Pegá el enlace de My Maps donde trazaste el recorrido y verificá que permita acceso público.':active==='historias'?'Escribí el artículo y pegá los enlaces de Drive. Revisá los permisos de los archivos antes de publicarlos.':active==='mapas'?'Pegá un mapa de Google My Maps. Las pinchetas, imágenes y textos se administran en My Maps.':'Editá los campos y luego guardá los cambios.';
@@ -26,6 +34,7 @@ function render() {
   $('#items').hidden=!list;
   const item=current() || (!token ? {} : null); if(!item){const p=document.createElement('p');p.textContent='Todavía no hay elementos. Usá el botón Agregar para crear uno.';p.className='empty';$('#fields').append(p);controls();return;}
   for(const [key,label,type,required] of schemas[active]) {
+    if(active==='textos'&&group(label,key)!==textGroup)continue;
     const wrap=document.createElement('label'); wrap.textContent=label;
     const input=document.createElement(type==='textarea'?'textarea':'input'); if(type!=='textarea')input.type=type;
     input.id='field-'+key; input.name=key; input.required=!!required; input.maxLength=type==='textarea'?100000:2000;
@@ -52,6 +61,7 @@ function validateAll() {
   }
 }
 $('#tabs').onclick=e=>{const b=e.target.closest('[data-tab]');if(b){active=b.dataset.tab;selected=0;render();}};
+$('#textGroup').onchange=()=>{textGroup=$('#textGroup').value;render();};
 $('#add').onclick=()=>{const item={};for(const [key,,type]of schemas[active])item[key]=type==='checkbox'?false:'';if(active==='historias')item.id=crypto.randomUUID();data[active].push(item);selected=data[active].length-1;changed();render();};
 $('#remove').onclick=()=>{const item=current();if(!Array.isArray(data[active])||!item)return;if(!confirm('¿Eliminar “'+(item.titulo||'Sin título')+'”? Se quitará de la web cuando guardes los cambios. El archivo original de Drive o My Maps no se elimina.'))return;data[active].splice(selected,1);selected=Math.max(0,selected-1);changed();render();status('Elemento eliminado del formulario. Guardá los cambios para quitarlo de la web.');};
 $('#loginForm').onsubmit=async e=>{e.preventDefault();const button=e.submitter;button.disabled=true;try{

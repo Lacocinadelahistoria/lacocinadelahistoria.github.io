@@ -25,6 +25,7 @@ function search() {
   $('#searchResults').innerHTML = `<p>${matches.length} resultado(s)</p>` + matches.map(x => `<button class="result" data-id="${esc(x.id)}">${esc(x.titulo)} →</button>`).join('');
 }
 function renderData(data) {
+  if(data.textos) for(const [key,,selector,attribute]of CocinaTextFields) if(typeof data.textos[key]==='string')document.querySelectorAll(selector).forEach(element=>{if(attribute)element.setAttribute(attribute,data.textos[key]);else element.textContent=data.textos[key];});
   historias = (data.historias || []).filter(x => x.publicado === true);
   render(); search();
   $('#timeline').innerHTML = (data.cronologia || []).map(x => `<article class="time-item"><strong>${esc(x.fecha)}</strong><h3>${esc(x.titulo)}</h3><p>${esc(x.texto)}</p></article>`).join('');
